@@ -187,6 +187,8 @@ namespace Dbragas.Controller
                     return BadRequest("Por favor, envie um arquivo XLSX válido.");
                 }
 
+                bool newClientsCreated = false; 
+
                 using (var stream = new MemoryStream())
                 {
                     await file.CopyToAsync(stream);
@@ -204,9 +206,13 @@ namespace Dbragas.Controller
                                 var name = worksheet.Cells[rowIndex, 1].Value.ToString();
                                 var email = worksheet.Cells[rowIndex, 2].Value.ToString();
                                 var typeClientName = worksheet.Cells[rowIndex, 3].Value.ToString();
+
+                                
                                 var existingClient = await _clientRepository.GetByEmail(email);
+
                                 if (existingClient == null)
                                 {
+                                    
                                     var existingTypeClient = await _typeClientRepository.GetByName(typeClientName);
 
                                     if (existingTypeClient == null)
@@ -240,6 +246,7 @@ namespace Dbragas.Controller
                                     };
 
                                     _clientRepository.Add(newClient);
+                                    newClientsCreated = true;
                                 }
 
                                 rowIndex++;
@@ -250,7 +257,14 @@ namespace Dbragas.Controller
 
                 if (await _clientRepository.SaveAllAsync())
                 {
-                    return Ok("Clientes importados com sucesso.");
+                    if (newClientsCreated)
+                    {
+                        return Ok("Clientes importados com sucesso.");
+                    }
+                    else
+                    {
+                        return Ok("Nenhum novo cliente foi criado durante a importação.");
+                    }
                 }
             }
             catch (Exception ex)
