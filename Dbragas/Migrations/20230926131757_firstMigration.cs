@@ -32,7 +32,7 @@ namespace Dbragas.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "varchar(120)", unicode: false, maxLength: 120, nullable: true),
                     Email = table.Column<string>(type: "varchar(150)", unicode: false, maxLength: 150, nullable: false),
-                    Password = table.Column<string>(type: "varchar(60)", unicode: false, maxLength: 60, nullable: false),
+                    Password = table.Column<string>(type: "varchar(MAX)", unicode: false, maxLength: int.MaxValue, nullable: false),
                     Username = table.Column<string>(type: "varchar(120)", unicode: false, maxLength: 120, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),

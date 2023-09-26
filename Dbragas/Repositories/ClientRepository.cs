@@ -41,7 +41,7 @@ namespace Dbragas.Repositories
         public async Task<Clients> GetById(Guid id)
         {
             var client = await _context.Clients.Where(x => x.Id == id).FirstOrDefaultAsync();
-            return null;
+            return client;
         }
 
         public void Patch(Clients clients)

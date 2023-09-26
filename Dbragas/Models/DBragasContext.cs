@@ -44,8 +44,20 @@ namespace DBragas.Models
             {
                 entity.Property(e => e.Id).ValueGeneratedNever();
             });
-
+            modelBuilder.Entity<Users>().HasData(
+                new Models.Users
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "dBragas",
+                    Email = "administração@dbragas.com.br",
+                    Password = "$2a$11$lniElpvb7zV4yqVO3pMrJ.qRztzLCtJPkzvjnyeGicomsEkSDFdCW",
+                    Username = "DBragas",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
             OnModelCreatingPartial(modelBuilder);
+            
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

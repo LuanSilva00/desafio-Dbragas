@@ -128,28 +128,34 @@ namespace Dbragas.Controller
             var clients = await _clientRepository.GetAllAsync();
             if(clients != null)
             {
-                return NotFound("Clientes não encontrados");
+                return Ok(clients);
             }
-            return Ok(clients);
+           return NotFound("Clientes não encontrados");
         }
         [HttpPatch("{id}")]
         [Authorize]
-        public async Task<ActionResult> PatchClient(Guid id, ClientPatchDTO ClientPatchDTO)
+        public async Task<ActionResult> PatchClient(Guid id, ClientPatchDTO clientPatchDTO)
         {
+            if (clientPatchDTO == null || !clientPatchDTO.GetType().GetProperties().Any(prop => prop.GetValue(clientPatchDTO) != null)) ;
             var existingClient = await _clientRepository.GetById(id);
 
             if (existingClient == null)
             {
-                return NotFound("User not found");
+                return NotFound("Usuario não encontrado");
             }
-
-            existingClient.Name = ClientPatchDTO.Name;
-            existingClient.Email = ClientPatchDTO.Email;
+            if (!string.IsNullOrEmpty(clientPatchDTO.Name))
+            {
+                existingClient.Name = clientPatchDTO.Name;
+            }
+            if (!string.IsNullOrEmpty(clientPatchDTO.Email))
+            {
+                existingClient.Email = clientPatchDTO.Email;
+            }
             existingClient.UpdatedAt = DateTime.UtcNow;
 
             if (await _clientRepository.SaveAllAsync())
             {
-                return Ok("User updated successfully");
+                return Ok("Usuario modificado com sucesso");
             }
             return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
         }
@@ -195,63 +201,80 @@ namespace Dbragas.Controller
                         var workbook = package.Workbook;
                         if (workbook.Worksheets.Count > 0)
                         {
-                            var worksheet = workbook.Worksheets[0]; 
-                            var rowIndex = 2; 
+                            var worksheet = workbook.Worksheets[0];
+                            var rowIndex = 2;
+                            var addedClients = 0; // Contador de clientes adicionados
 
-                            while (worksheet.Cells[rowIndex, 1].Value != null) 
+                            while (worksheet.Cells[rowIndex, 1].Value != null)
                             {
                                 var name = worksheet.Cells[rowIndex, 1].Value.ToString();
                                 var email = worksheet.Cells[rowIndex, 2].Value.ToString();
                                 var typeClientName = worksheet.Cells[rowIndex, 3].Value.ToString();
-                                var existingTypeClient = await _typeClientRepository.GetByName(typeClientName);
+                                var existingClient = await _clientRepository.GetByEmail(email);
 
-                                if (existingTypeClient == null)
+                                if (existingClient == null)
                                 {
-                                    existingTypeClient = new TypeClients
+                                    var existingTypeClient = await _typeClientRepository.GetByName(typeClientName);
+
+                                    if (existingTypeClient == null)
+                                    {
+                                        existingTypeClient = new TypeClients
+                                        {
+                                            Id = Guid.NewGuid(),
+                                            Name = typeClientName,
+                                            CreatedAt = DateTime.UtcNow,
+                                            UpdatedAt = DateTime.UtcNow,
+                                            IsActive = true
+                                        };
+
+                                        _typeClientRepository.Add(existingTypeClient);
+
+                                        if (!await _typeClientRepository.SaveAllAsync())
+                                        {
+                                            return StatusCode(StatusCodes.Status500InternalServerError, "Erro ao salvar o tipo de cliente.");
+                                        }
+                                    }
+
+                                    var newClient = new Clients
                                     {
                                         Id = Guid.NewGuid(),
-                                        Name = typeClientName,
+                                        Name = name,
+                                        Email = email,
                                         CreatedAt = DateTime.UtcNow,
                                         UpdatedAt = DateTime.UtcNow,
-                                        IsActive = true
+                                        IsActive = true,
+                                        TypeClientId = (Guid)existingTypeClient.Id
                                     };
 
-                                    _typeClientRepository.Add(existingTypeClient);
-
-                                    if (!await _typeClientRepository.SaveAllAsync())
-                                    {
-                                        return StatusCode(StatusCodes.Status500InternalServerError, "Erro ao salvar o tipo de cliente.");
-                                    }
+                                    _clientRepository.Add(newClient);
+                                    addedClients++;
                                 }
-                                var newClient = new Clients
-                                {
-                                    Id = Guid.NewGuid(),
-                                    Name = name,
-                                    Email = email,
-                                    CreatedAt = DateTime.UtcNow,
-                                    UpdatedAt = DateTime.UtcNow,
-                                    IsActive = true,
-                                    TypeClientId = (Guid)existingTypeClient.Id
-                                };
 
-                                _clientRepository.Add(newClient);
                                 rowIndex++;
+                            }
+
+                            if (addedClients > 0)
+                            {
+                                if (await _clientRepository.SaveAllAsync())
+                                {
+                                    return Ok($"Foram importados {addedClients} clientes com sucesso.");
+                                }
+                            }
+                            else
+                            {
+                                return Ok("Nenhum cliente novo foi adicionado.");
                             }
                         }
                     }
                 }
 
-                if (await _clientRepository.SaveAllAsync())
-                {
-                    return Ok("Clientes importados com sucesso.");
-                }
+                return BadRequest("Nenhum cliente foi importado.");
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Erro: {ex.Message}");
             }
-
-            return StatusCode(StatusCodes.Status500InternalServerError, "Erro ao processar a solicitação.");
         }
+
     }
 }

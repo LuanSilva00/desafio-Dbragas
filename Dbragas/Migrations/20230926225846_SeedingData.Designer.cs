@@ -4,6 +4,7 @@ using DBragas.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dbragas.Migrations
 {
     [DbContext(typeof(DBragasContext))]
-    partial class DBragasContextModelSnapshot : ModelSnapshot
+    [Migration("20230926225846_SeedingData")]
+    partial class SeedingData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,9 +114,9 @@ namespace Dbragas.Migrations
                         .HasColumnType("varchar(120)");
 
                     b.Property<string>("Password")
-                        .HasMaxLength(2147483647)
+                        .HasMaxLength(14)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(max)");
+                        .HasColumnType("varchar(14)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -132,13 +134,13 @@ namespace Dbragas.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("3b7cf297-3f76-463d-80d8-1b611a41e9e9"),
-                            CreatedAt = new DateTime(2023, 9, 26, 23, 11, 52, 299, DateTimeKind.Utc).AddTicks(1770),
+                            Id = new Guid("09ffba47-040d-44b0-ab4e-426df2479072"),
+                            CreatedAt = new DateTime(2023, 9, 26, 22, 58, 46, 532, DateTimeKind.Utc).AddTicks(1270),
                             Email = "administração@dbragas.com.br",
                             IsActive = true,
                             Name = "dBragas",
                             Password = "$2a$11$lniElpvb7zV4yqVO3pMrJ.qRztzLCtJPkzvjnyeGicomsEkSDFdCW",
-                            UpdatedAt = new DateTime(2023, 9, 26, 23, 11, 52, 299, DateTimeKind.Utc).AddTicks(1774),
+                            UpdatedAt = new DateTime(2023, 9, 26, 22, 58, 46, 532, DateTimeKind.Utc).AddTicks(1273),
                             Username = "DBragas"
                         });
                 });

@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="EfCore.SchemaCompare" Version="6.0.0" />
     <PackageReference Include="EPPlus" Version="6.2.9" />
     <PackageReference Include="Foolproof" Version="0.9.4518" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.22" />

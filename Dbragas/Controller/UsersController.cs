@@ -74,9 +74,6 @@ namespace Dbragas.Controller
 
             return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
         }
-
-
-
         [HttpGet("{id}")]
         [Authorize]
         public async Task<ActionResult> GetById(Guid id)

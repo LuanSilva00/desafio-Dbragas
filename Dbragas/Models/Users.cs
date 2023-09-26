@@ -17,7 +17,7 @@ namespace DBragas.Models
         [StringLength(150)]
         [Unicode(false)]
         public string? Email { get; set; }
-        [StringLength(14)]
+        [StringLength(int.MaxValue)]
         [Unicode(false)]
         public string? Password { get; set; }
         [Required]
