@@ -29,12 +29,12 @@ namespace Dbragas.Repositories
 
         public async Task<IEnumerable<Users>> GetAllAsync()
         {
-            return await _context.Users.ToListAsync();
+            return await _context.Users.Where(x => x.IsActive).ToListAsync();
         }
 
         public async Task<Users> GetById(Guid id)
         {
-            var user = await _context.Users.Where(x => x.Id == id).FirstOrDefaultAsync();
+            var user = await _context.Users.Where(x => x.Id == id && x.IsActive).FirstOrDefaultAsync();
             if (user != null)
             {
                 return user;
@@ -44,15 +44,16 @@ namespace Dbragas.Repositories
 
         public async Task<Users> GetByUsername(string username)
         {
-            var user = await _context.Users.Where(x => x.Username == username).FirstOrDefaultAsync();
+            var user = await _context.Users.Where(x => x.Username == username && x.IsActive).FirstOrDefaultAsync();
             return user;
         }
 
         public async Task<Users> GetByEmail(string email)
         {
-            var user = await _context.Users.Where(x => x.Email == email).FirstOrDefaultAsync();
+            var user = await _context.Users.Where(x => x.Email == email && x.IsActive).FirstOrDefaultAsync();
             return user;
         }
+
         public void Patch(Users users)
         {
             if (!string.IsNullOrWhiteSpace(users.Password))
@@ -60,8 +61,10 @@ namespace Dbragas.Repositories
                 throw new InvalidOperationException("Senha não pode ser atualizada durante a operação de patch.");
             }
 
+            users.IsActive = true;
             _context.Entry(users).State = EntityState.Modified;
         }
+
 
 
         public async Task<bool> SaveAllAsync()

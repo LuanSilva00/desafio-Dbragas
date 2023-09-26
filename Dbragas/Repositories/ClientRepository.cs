@@ -29,25 +29,27 @@ namespace Dbragas.Repositories
 
         public async Task<IEnumerable<Clients>> GetAllAsync()
         {
-            return await _context.Clients.ToListAsync();
+            return await _context.Clients.Where(x => x.IsActive).ToListAsync();
         }
 
         public async Task<Clients> GetByEmail(string email)
         {
-            var client = await _context.Clients.Where(x => x.Email == email).FirstOrDefaultAsync();
+            var client = await _context.Clients.Where(x => x.Email == email && x.IsActive).FirstOrDefaultAsync();
             return client;
         }
 
         public async Task<Clients> GetById(Guid id)
         {
-            var client = await _context.Clients.Where(x => x.Id == id).FirstOrDefaultAsync();
+            var client = await _context.Clients.Where(x => x.Id == id && x.IsActive).FirstOrDefaultAsync();
             return client;
         }
 
         public void Patch(Clients clients)
         {
-            _context.Entry(clients).State = EntityState.Modified; 
+            clients.IsActive = true; 
+            _context.Entry(clients).State = EntityState.Modified;
         }
+
 
         public async Task<bool> SaveAllAsync()
         {
