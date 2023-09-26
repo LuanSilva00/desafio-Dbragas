@@ -20,3 +20,14 @@ Siga estas etapas para configurar e executar o projeto em sua máquina:
 
    ```shell
    git clone https://github.com/LuanSilva00/desafio-Dbragas
+
+2 **Configuração do Banco de Dados:
+
+Abra o arquivo appsettings.json.
+Configure sua conexão com o banco de dados no arquivo, substituindo "SuaStringDeConexão" pela string de conexão apropriada.
+Aplicação de Migrações:
+
+Execute as migrações para criar as tabelas do banco de dados:
+```shell
+dotnet ef database update
+   
