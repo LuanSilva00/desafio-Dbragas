@@ -26,6 +26,6 @@ namespace DBragas.Models
 
         [ForeignKey("TypeClientId")]
         [InverseProperty("Clients")]
-        public virtual TypeClients TypeClient { get; set; }
+        public virtual TypeClients?TypeClient { get; set; }
     }
-}
+  }

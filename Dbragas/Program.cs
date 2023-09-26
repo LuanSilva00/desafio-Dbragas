@@ -32,6 +32,9 @@ builder.Services.AddDbContext<DBragasContext>(options =>
 });
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<ITypeClientRepository, TypeClientRepository>();
+
 
 builder.Services.AddControllers();
 

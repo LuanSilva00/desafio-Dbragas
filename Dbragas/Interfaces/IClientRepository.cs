@@ -9,9 +9,9 @@ namespace Dbragas.Interfaces
 
         void Delete(Clients clients);
 
-        Task<Clients> GetAll();
+        Task<Clients> GetById(Guid id);
 
-        Task<Clients> GetByEmail();
+        Task<Clients> GetByEmail(string email);
 
         Task<IEnumerable<Clients>> GetAllAsync();
 

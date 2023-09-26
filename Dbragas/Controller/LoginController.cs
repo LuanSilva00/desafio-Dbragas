@@ -25,7 +25,7 @@ namespace Dbragas.Controller
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<ActionResult<dynamic>> AuthenticateAsync([FromBody] userLogin userModel)
+        public async Task<ActionResult<dynamic>> AuthenticateAsync([FromBody] userLoginDTO userModel)
         {
             if (!ModelState.IsValid)
             {

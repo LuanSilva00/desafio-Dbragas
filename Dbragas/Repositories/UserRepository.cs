@@ -19,11 +19,11 @@ namespace Dbragas.Repositories
             _context.Users.Add(users);
         }
 
-        public void Delete(Users user)
+        public void Delete(Users users)
         {
-            user.DeletedAt = DateTime.Now;
-            user.IsActive = false;
-            _context.Users.Update(user);
+            users.DeletedAt = DateTime.Now;
+            users.IsActive = false;
+            _context.Users.Update(users);
         }
 
 

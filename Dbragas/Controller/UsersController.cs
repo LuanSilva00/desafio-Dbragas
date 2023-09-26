@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Authorization;
+using System.Data.Common;
 
 namespace Dbragas.Controller
 {
@@ -20,16 +21,17 @@ namespace Dbragas.Controller
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult> AddUser(Users users)
+        public async Task<ActionResult> AddUser([FromBody] CreateUserDto createUserDto)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(users.Password))
+                if (!ModelState.IsValid)
                 {
-                    throw new InvalidOperationException("O campo Senha não pode estar vazio");
+                    return BadRequest(ModelState);
                 }
-                var existingUserByEmail = await _usersRepository.GetByEmail(users.Email);
-                var existingUserByUsername = await _usersRepository.GetByUsername(users.Username);
+
+                var existingUserByEmail = await _usersRepository.GetByEmail(createUserDto.Email);
+                var existingUserByUsername = await _usersRepository.GetByUsername(createUserDto.Username);
 
                 if (existingUserByEmail != null)
                 {
@@ -40,31 +42,39 @@ namespace Dbragas.Controller
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
                 }
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password);
+                var newUser = new Users
+                {
+                    Name = createUserDto.Name,
+                    Email = createUserDto.Email,
+                    Password = hashedPassword,
+                    Username = createUserDto.Username,
+                    Id = Guid.NewGuid(),
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
 
-                users.Id = Guid.NewGuid();
-                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(users.Password);
-                users.Password = hashedPassword;
-                users.CreatedAt = DateTime.UtcNow;
-                users.UpdatedAt = DateTime.UtcNow;
-                users.IsActive = true;
-                _usersRepository.Add(users);
+
+                _usersRepository.Add(newUser);
 
                 if (await _usersRepository.SaveAllAsync())
                 {
                     return Ok("Usuário salvo com sucesso");
                 }
             }
-            catch (DbUpdateException)
+            catch (DbException)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
             }
             catch (Exception)
             {
-                return BadRequest("Error: An error occurred while saving the user.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
             }
 
             return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
         }
+
 
 
         [HttpGet("{id}")]
@@ -107,10 +117,19 @@ namespace Dbragas.Controller
 
             return Ok(newArray);
         }
-        [HttpPatch("{id}")]
         [Authorize]
-        public async Task<ActionResult> PatchUser(Guid id, Users updatedUser)
+        [HttpPatch("{id}")]
+        public async Task<ActionResult> PatchUser(Guid id, [FromBody] PatchUserDTO userPatchDto)
         {
+            if (userPatchDto == null || !userPatchDto.GetType().GetProperties().Any(prop => prop.GetValue(userPatchDto) != null))
+            {
+                return BadRequest("Request vazio");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var existingUser = await _usersRepository.GetById(id);
 
             if (existingUser == null)
@@ -118,17 +137,31 @@ namespace Dbragas.Controller
                 return NotFound("User not found");
             }
 
-            existingUser.Name = updatedUser.Name;
-            existingUser.Email = updatedUser.Email;
-            existingUser.Username = updatedUser.Username;
+            if (!string.IsNullOrEmpty(userPatchDto.Name))
+            {
+                existingUser.Name = userPatchDto.Name;
+            }
+
+            if (!string.IsNullOrEmpty(userPatchDto.Email))
+            {
+                existingUser.Email = userPatchDto.Email;
+            }
+
+            if (!string.IsNullOrEmpty(userPatchDto.Username))
+            {
+                existingUser.Username = userPatchDto.Username;
+            }
+
             existingUser.UpdatedAt = DateTime.UtcNow;
 
             if (await _usersRepository.SaveAllAsync())
             {
                 return Ok("User updated successfully");
             }
+
             return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
         }
+
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<ActionResult> DeleteUser(Guid id)
