@@ -106,17 +106,16 @@ namespace Dbragas.Controller
             try
             {
                 var client = await _clientRepository.GetById(id);
-                if (client != null)
+                if(client != null)
                 {
                     return Ok(client);
                 }
                 else
                 {
                     return NotFound("Cliente não encontrado");
-                    ;
-                }
+      ;         }
             }
-            catch (Exception)
+            catch(Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
 
@@ -127,7 +126,7 @@ namespace Dbragas.Controller
         public async Task<ActionResult<IEnumerable<Clients>>> GetClients()
         {
             var clients = await _clientRepository.GetAllAsync();
-            if (clients != null)
+            if(clients != null)
             {
                 return NotFound("Clientes não encontrados");
             }
@@ -159,12 +158,12 @@ namespace Dbragas.Controller
         public async Task<ActionResult> DeleteClient(Guid id)
         {
             var client = await _clientRepository.GetById(id);
-            if (client == null)
+            if(client == null)
             {
                 return NotFound("Cliente não encontrado");
             }
             _clientRepository.Delete(client);
-            if (await _clientRepository.SaveAllAsync())
+            if(await _clientRepository.SaveAllAsync()) 
             {
                 return Ok("Cliente deletado com sucesso");
             }
@@ -187,8 +186,6 @@ namespace Dbragas.Controller
                     return BadRequest("Por favor, envie um arquivo XLSX válido.");
                 }
 
-                bool newClientsCreated = false; 
-
                 using (var stream = new MemoryStream())
                 {
                     await file.CopyToAsync(stream);
@@ -198,57 +195,46 @@ namespace Dbragas.Controller
                         var workbook = package.Workbook;
                         if (workbook.Worksheets.Count > 0)
                         {
-                            var worksheet = workbook.Worksheets[0];
-                            var rowIndex = 2;
+                            var worksheet = workbook.Worksheets[0]; 
+                            var rowIndex = 2; 
 
-                            while (worksheet.Cells[rowIndex, 1].Value != null)
+                            while (worksheet.Cells[rowIndex, 1].Value != null) 
                             {
                                 var name = worksheet.Cells[rowIndex, 1].Value.ToString();
                                 var email = worksheet.Cells[rowIndex, 2].Value.ToString();
                                 var typeClientName = worksheet.Cells[rowIndex, 3].Value.ToString();
+                                var existingTypeClient = await _typeClientRepository.GetByName(typeClientName);
 
-                                
-                                var existingClient = await _clientRepository.GetByEmail(email);
-
-                                if (existingClient == null)
+                                if (existingTypeClient == null)
                                 {
-                                    
-                                    var existingTypeClient = await _typeClientRepository.GetByName(typeClientName);
-
-                                    if (existingTypeClient == null)
-                                    {
-                                        existingTypeClient = new TypeClients
-                                        {
-                                            Id = Guid.NewGuid(),
-                                            Name = typeClientName,
-                                            CreatedAt = DateTime.UtcNow,
-                                            UpdatedAt = DateTime.UtcNow,
-                                            IsActive = true
-                                        };
-
-                                        _typeClientRepository.Add(existingTypeClient);
-
-                                        if (!await _typeClientRepository.SaveAllAsync())
-                                        {
-                                            return StatusCode(StatusCodes.Status500InternalServerError, "Erro ao salvar o tipo de cliente.");
-                                        }
-                                    }
-
-                                    var newClient = new Clients
+                                    existingTypeClient = new TypeClients
                                     {
                                         Id = Guid.NewGuid(),
-                                        Name = name,
-                                        Email = email,
+                                        Name = typeClientName,
                                         CreatedAt = DateTime.UtcNow,
                                         UpdatedAt = DateTime.UtcNow,
-                                        IsActive = true,
-                                        TypeClientId = (Guid)existingTypeClient.Id
+                                        IsActive = true
                                     };
 
-                                    _clientRepository.Add(newClient);
-                                    newClientsCreated = true;
-                                }
+                                    _typeClientRepository.Add(existingTypeClient);
 
+                                    if (!await _typeClientRepository.SaveAllAsync())
+                                    {
+                                        return StatusCode(StatusCodes.Status500InternalServerError, "Erro ao salvar o tipo de cliente.");
+                                    }
+                                }
+                                var newClient = new Clients
+                                {
+                                    Id = Guid.NewGuid(),
+                                    Name = name,
+                                    Email = email,
+                                    CreatedAt = DateTime.UtcNow,
+                                    UpdatedAt = DateTime.UtcNow,
+                                    IsActive = true,
+                                    TypeClientId = (Guid)existingTypeClient.Id
+                                };
+
+                                _clientRepository.Add(newClient);
                                 rowIndex++;
                             }
                         }
@@ -257,14 +243,7 @@ namespace Dbragas.Controller
 
                 if (await _clientRepository.SaveAllAsync())
                 {
-                    if (newClientsCreated)
-                    {
-                        return Ok("Clientes importados com sucesso.");
-                    }
-                    else
-                    {
-                        return Ok("Nenhum novo cliente foi criado durante a importação.");
-                    }
+                    return Ok("Clientes importados com sucesso.");
                 }
             }
             catch (Exception ex)
@@ -274,6 +253,5 @@ namespace Dbragas.Controller
 
             return StatusCode(StatusCodes.Status500InternalServerError, "Erro ao processar a solicitação.");
         }
-
     }
 }
