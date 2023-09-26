@@ -19,4 +19,4 @@ Siga estas etapas para configurar e executar o projeto em sua máquina:
 1. **Clonar o repositório**: Clone este repositório em sua máquina local.
 
    ```shell
-   git clone https://github.com/seu-usuario/seu-projeto.git
+   git clone https://github.com/LuanSilva00/desafio-Dbragas
