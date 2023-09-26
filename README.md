@@ -24,7 +24,7 @@ Siga estas etapas para configurar e executar o projeto em sua máquina:
 2 **Configuração do Banco de Dados:
 
 Abra o arquivo appsettings.json.
-Configure sua conexão com o banco de dados no arquivo, substituindo "SuaStringDeConexão" pela string de conexão apropriada.
+Configure sua conexão com o banco de dados no arquivo, substituindo a string de conexão.
 Aplicação de Migrações:
 
 Execute as migrações para criar as tabelas do banco de dados:
