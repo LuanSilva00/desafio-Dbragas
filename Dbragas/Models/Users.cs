@@ -19,7 +19,6 @@ namespace DBragas.Models
         [StringLength(150)]
         [Unicode(false)]
         public string Email { get; set; }
-        [Required]
         [StringLength(14)]
         [Unicode(false)]
         public string Password { get; set; }
@@ -27,9 +26,20 @@ namespace DBragas.Models
         [StringLength(120)]
         [Unicode(false)]
         public string Username { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public bool IsActive { get; set; }
+    }
+    public class userLogin
+    {
+        [Required]
+        [StringLength(120)]
+        [Unicode(false)]
+        public string Username { get; set; }
+        [Required]
+        [StringLength(14)]
+        [Unicode(false)]
+        public string Password { get; set; }
     }
 }

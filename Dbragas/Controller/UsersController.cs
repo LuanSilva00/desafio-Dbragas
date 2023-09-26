@@ -3,6 +3,8 @@ using Dbragas.Repositories;
 using DBragas.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using BCrypt.Net;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Dbragas.Controller
 {
@@ -16,58 +18,119 @@ namespace Dbragas.Controller
             _usersRepository = usersRepository;
         }
 
-        [HttpGet("findAll")]
-        public async Task<ActionResult<IEnumerable<Users>>> GetUsers()
-        {
-            var users = await _usersRepository.GetAllAsync();
-            if (users == null || !users.Any())
-            {
-                return NotFound("Usuários não encontrados");
-            }
-
-            return Ok(users);
-        }
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult> AddUser(Users users)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
             try
             {
+                if (string.IsNullOrWhiteSpace(users.Password))
+                {
+                    throw new InvalidOperationException("O campo Senha não pode estar vazio");
+                }
+                var existingUserByEmail = await _usersRepository.GetByEmail(users.Email);
+                var existingUserByUsername = await _usersRepository.GetByUsername(users.Username);
+
+                if (existingUserByEmail != null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
+                }
+
+                if (existingUserByUsername != null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
+                }
+
+                users.Id = Guid.NewGuid();
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(users.Password);
+                users.Password = hashedPassword;
+                users.CreatedAt = DateTime.UtcNow;
+                users.UpdatedAt = DateTime.UtcNow;
+                users.IsActive = true;
                 _usersRepository.Add(users);
+
                 if (await _usersRepository.SaveAllAsync())
                 {
-                    return Ok("User Saved Successfully");
+                    return Ok("Usuário salvo com sucesso");
                 }
             }
             catch (DbUpdateException)
             {
-                return BadRequest("Error: Duplicate primary key. User not saved.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
             }
             catch (Exception)
             {
                 return BadRequest("Error: An error occurred while saving the user.");
             }
+
             return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
         }
-        [HttpPatch]
-        public async Task<ActionResult> PatchUser(Users users)
+
+
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<ActionResult> GetById(Guid id)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
             try
             {
-                _usersRepository.Patch(users);
-                if (await _usersRepository.SaveAllAsync())
+                var user = await _usersRepository.GetById(id);
+                if (user != null)
                 {
-                    return Ok("User updated sucessfuly");
+                    user.Password = null;
+                    return Ok(user);
+                }
+                else
+                {
+                    return NotFound("Usuário não encontrado");
                 }
             }
             catch (Exception)
             {
-                return BadRequest("Error: An error occurred while saving the user.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
+            }
+        }
+        [HttpGet("findAll")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<Users>>> GetUsers()
+        {
+            var users = await _usersRepository.GetAllAsync();
+
+            if (users == null || !users.Any())
+            {
+                return NotFound("Usuários não encontrados");
+            }
+            var newArray = users.Select(user =>
+            {
+                user.Password = null;
+                return user;
+            }).ToList();
+
+            return Ok(newArray);
+        }
+        [HttpPatch("{id}")]
+        [Authorize]
+        public async Task<ActionResult> PatchUser(Guid id, Users updatedUser)
+        {
+            var existingUser = await _usersRepository.GetById(id);
+
+            if (existingUser == null)
+            {
+                return NotFound("User not found");
+            }
+
+            existingUser.Name = updatedUser.Name;
+            existingUser.Email = updatedUser.Email;
+            existingUser.Username = updatedUser.Username;
+            existingUser.UpdatedAt = DateTime.UtcNow;
+
+            if (await _usersRepository.SaveAllAsync())
+            {
+                return Ok("User updated successfully");
             }
             return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
         }
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<ActionResult> DeleteUser(Guid id)
         {
             var user = await _usersRepository.GetById(id);
@@ -79,19 +142,6 @@ namespace Dbragas.Controller
 
             if(await _usersRepository.SaveAllAsync()) {
                 return Ok("Usuário deletado com sucesso!");
-            }
-            return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
-        }
-        [HttpGet("{id}")]
-        public async Task<ActionResult> GetById(Guid id)
-        {
-            try
-            {
-                await _usersRepository.GetById(id);
-            }
-            catch (Exception)
-            {
-                return NotFound("Usuário não encontrado");
             }
             return StatusCode(StatusCodes.Status500InternalServerError, "Error: An error occurred while processing the request.");
         }

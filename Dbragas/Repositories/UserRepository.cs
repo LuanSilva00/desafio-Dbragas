@@ -1,6 +1,7 @@
 ﻿using Dbragas.Interfaces;
 using DBragas.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Dbragas.Repositories
@@ -18,10 +19,13 @@ namespace Dbragas.Repositories
             _context.Users.Add(users);
         }
 
-        public void Delete(Users users)
+        public void Delete(Users user)
         {
-            _context.Users.Remove(users);
+            user.DeletedAt = DateTime.Now;
+            user.IsActive = false;
+            _context.Users.Update(user);
         }
+
 
         public async Task<IEnumerable<Users>> GetAllAsync()
         {
@@ -31,18 +35,34 @@ namespace Dbragas.Repositories
         public async Task<Users> GetById(Guid id)
         {
             var user = await _context.Users.Where(x => x.Id == id).FirstOrDefaultAsync();
-            if(user != null)
+            if (user != null)
             {
-                user.Password = null;
-                return user;    
+                return user;
             }
-            throw new KeyNotFoundException();
+            return null;
         }
 
+        public async Task<Users> GetByUsername(string username)
+        {
+            var user = await _context.Users.Where(x => x.Username == username).FirstOrDefaultAsync();
+            return user;
+        }
+
+        public async Task<Users> GetByEmail(string email)
+        {
+            var user = await _context.Users.Where(x => x.Email == email).FirstOrDefaultAsync();
+            return user;
+        }
         public void Patch(Users users)
         {
+            if (!string.IsNullOrWhiteSpace(users.Password))
+            {
+                throw new InvalidOperationException("Senha não pode ser atualizada durante a operação de patch.");
+            }
+
             _context.Entry(users).State = EntityState.Modified;
         }
+
 
         public async Task<bool> SaveAllAsync()
         {
